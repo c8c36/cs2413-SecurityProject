@@ -46,8 +46,6 @@
   virtualisation.virtualbox.guest.enable = true;
 
   image.modules.virtualbox = {
-    virtualisation.diskSize = 20 * 1024;
-
     image.fileName = lib.mkForce "k3s-token-lab.ova";
   };
 
