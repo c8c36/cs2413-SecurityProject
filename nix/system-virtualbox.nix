@@ -1,12 +1,4 @@
 { pkgs, lib, ... }: {
-  services.k3s = {
-    enable = true;
-    role = "server";
-    extraFlags = toString [
-      "--disable=traefik"
-      "--disable=servicelb"
-    ];
-  };
 
   services.openssh = {
     enable = true;
@@ -23,7 +15,6 @@
     isNormalUser = true;
     extraGroups = [
       "wheel"
-      "k3s"
     ];
     initialPassword = "lab";
   };
@@ -35,7 +26,6 @@
     nano
     git
     jq
-    kubectl
   ];
 
   networking.firewall.allowedTCPPorts = [
