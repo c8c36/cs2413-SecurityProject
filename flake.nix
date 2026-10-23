@@ -13,6 +13,7 @@
       };
     in
     {
+      all-images = (makeSystem).config.system.build.images;
       virtualbox-vm = (makeSystem).config.system.build.images.virtualbox;
     };
 }
