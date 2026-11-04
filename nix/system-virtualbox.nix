@@ -7,6 +7,7 @@
       PasswordAuthentication = true;
     };
   };
+  services.firewalld.enable = true;
 
   networking.hostName = "k3s-token-lab";
   networking.networkmanager.enable = true;
@@ -26,11 +27,6 @@
     nano
     git
     jq
-  ];
-
-  networking.firewall.allowedTCPPorts = [
-    22
-    6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
   ];
 
   virtualisation.virtualbox.guest.enable = true;
