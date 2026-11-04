@@ -11,6 +11,4 @@
   users.users.lab.extraGroups = [
     "k3s"
   ];
-
-  environment.systemPackages = with pkgs; [ kubectl ];
 }
