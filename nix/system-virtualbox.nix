@@ -8,6 +8,7 @@
     };
   };
   services.firewalld.enable = true;
+  networking.nftables.enable = true;
 
   networking.hostName = "k3s-token-lab";
   networking.networkmanager.enable = true;
