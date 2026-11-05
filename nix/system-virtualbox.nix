@@ -28,6 +28,8 @@
     nano
     git
     jq
+    man-pages
+    man-pages-posix
   ];
 
   virtualisation.virtualbox.guest.enable = true;
