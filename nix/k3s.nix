@@ -6,6 +6,17 @@
       "--disable=servicelb"
       "--write-kubeconfig-group=k3s"
     ];
+
+    autoDeployCharts = {
+      headlamp = {
+        name = "headlamp";
+        repo = "https://kubernetes-sigs.github.io/headlamp";
+        version = "0.46.0";
+        hash = "sha256-+qRxqMXFUSWz3O7Rz3MADhztGPB+IIjl4S51KS+5rmI=";
+
+        targetNamespace = "kube-system";
+      };
+    };
   };
 
   users.users.lab.extraGroups = [
