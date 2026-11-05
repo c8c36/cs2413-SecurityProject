@@ -16,5 +16,9 @@
     6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
   ];
 
+  environment.variables = {
+    KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+  };
+
   environment.systemPackages = with pkgs; [ kubernetes-helm ];
 }
