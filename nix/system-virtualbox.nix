@@ -37,6 +37,13 @@
   image.modules.virtualbox = {
     virtualisation.diskSize = 20 * 1024;
     image.fileName = lib.mkForce "k3s-token-lab.ova";
+    virtualbox.params = {
+      nat-pf1 = [
+        "cluster,tcp,127.0.0.1,6443,,6443"
+        "ssh,tcp,127.0.0.1,2222,,22"
+        "web,tcp,127.0.0.1,8080,,8080"
+      ];
+    };
   };
 
   system.stateVersion = "26.05";
