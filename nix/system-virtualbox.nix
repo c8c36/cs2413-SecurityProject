@@ -46,5 +46,9 @@
     };
   };
 
+  networking.firewall.allowedTCPPorts = [
+    8080
+  ];
+
   system.stateVersion = "26.05";
 }
