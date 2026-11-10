@@ -39,16 +39,12 @@
     image.fileName = lib.mkForce "k3s-token-lab.ova";
     virtualbox.params = {
       nat-pf1 = [
-        "cluster,tcp,127.0.0.1,6443,,6443"
-        "ssh,tcp,127.0.0.1,2222,,22"
-        "web,tcp,127.0.0.1,8080,,8080"
+        "cluster,tcp,127.0.0.1,6443,,6443" # kube port-forward
+        "ssh,tcp,127.0.0.1,2222,,22" # ssh port-forward
+        "web,tcp,127.0.0.1,30000,,30000" # headlamp port-forward
       ];
     };
   };
-
-  networking.firewall.allowedTCPPorts = [
-    8080
-  ];
 
   system.stateVersion = "26.05";
 }
