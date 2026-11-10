@@ -3,9 +3,8 @@
     enable = true;
     role = "server";
     extraFlags = toString [
-      "--disable=servicelb"
-      "--write-kubeconfig-mode=640"
-      "--write-kubeconfig-group=k3s"
+      "--write-kubeconfig-mode 640"
+      "--write-kubeconfig-group k3s"
     ];
 
     autoDeployCharts = {
