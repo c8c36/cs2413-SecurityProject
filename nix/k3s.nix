@@ -15,6 +15,9 @@
         hash = "sha256-+qRxqMXFUSWz3O7Rz3MADhztGPB+IIjl4S51KS+5rmI=";
 
         targetNamespace = "kube-system";
+        values = {
+          config.unsafeUseServiceAccountToken = true;
+        };
       };
     };
 
