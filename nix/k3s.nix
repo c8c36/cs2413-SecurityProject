@@ -60,6 +60,15 @@
     6443 # To test whether the thing is alive
   ];
 
+  services.firewalld.zones = {
+    trusted = {
+      sources = [
+        { address = "10.42.0.0/16"; }
+        { address = "10.43.0.0/16"; }
+      ];
+    };
+  };
+
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
     EDITOR = "vim";
