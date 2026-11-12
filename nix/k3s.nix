@@ -57,7 +57,9 @@
   ];
 
   networking.firewall.allowedTCPPorts = [
-    6443 # To test whether the thing is alive
+    6443 # Required API
+    8472 # Required Flannel
+    10250 # Required for metrics
   ];
 
   services.firewalld.zones = {
