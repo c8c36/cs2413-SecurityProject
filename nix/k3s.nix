@@ -57,11 +57,12 @@
   ];
 
   networking.firewall.allowedTCPPorts = [
-    6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
+    6443 # To test whether the thing is alive
   ];
 
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+    EDITOR = "vim";
   };
 
   environment.systemPackages = with pkgs; [ kubernetes-helm ];
