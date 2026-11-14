@@ -1,0 +1,43 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: job-controller
+  namespace: default
+rules:
+  - verbs: ["get", "list", "watch", "create", "update", "patch"]
+    apiGroups: ["batch"]
+    resources: ["jobs"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-controller
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-controller
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: job-controller
+subjects:
+  - kind: ServiceAccount
+    name: job-controller
+    namespace: default
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: target-pod
+  namespace: default
+spec:
+  containers:
+    - name: runtime
+      image: python/python:3.15-bookworm
+      command: ["bin/bash", "-c", "--"]
+      args: ["while true; do sleep 60; done;"]
+  serviceAccountName: job-controller
+  automountServiceAccountToken: true
