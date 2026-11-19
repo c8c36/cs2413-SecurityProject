@@ -1,6 +1,12 @@
+# README
+
+This is repository for introduction to cyber security project. The target is to
+demonstrate token security within a compromised environment.
+
+## Table Of Contents
+
 <!--toc:start-->
 
-- [WIP](#wip)
 - [README](#readme)
   - [`k3s-token-lab` Virtual Machine Information](#k3s-token-lab-virtual-machine-information)
     - [Setup Instructions](#setup-instructions)
@@ -10,12 +16,6 @@
 
 <!--toc:end-->
 
-# WIP
-
-# README
-
-This is repository for introduction to cyber security project.
-
 ## `k3s-token-lab` Virtual Machine Information
 
 The virtual machine image in this documentation is purpose-built for Oracle
@@ -23,18 +23,21 @@ VirtualBox VM manager.
 
 Credentials: `lab` and `lab` are username and password respectively.
 
-Service: K3s cluster, ssh.
+Services: K3s cluster, ssh.
 
 Exposed ports: 22/ssh service, and 6443/kubeapi server.
 
 ### Setup Instructions
 
-> For each component look for sections below for installation instructions.
+> SKIP TO [VirtualBox](#virtualbox) UNDER IN
+> [Installation Instructions (Windows)](#installation-instructions-windows) IF
+> YOU ALREADY HAVE `k3s-token-lab.ova`
 
 Software **pre-requesities**:
 
 - Access to `nix` package manager to build VM image.
 - Oracle VirtualBox virtual machine manager.
+  ([Download link](https://www.virtualbox.org/wiki/Downloads))
 
 Steps to **build** image:
 
@@ -80,8 +83,8 @@ Installation instructions for **Windows 11**. These steps were tested with
 
 #### VirtualBox
 
-Install `Windows hosts` option for
-[VirtualBox](https://www.virtualbox.org/wiki/Downloads) (clickable).
+Install `Windows hosts` option for VirtualBox
+([VirtualBox downloads page](https://www.virtualbox.org/wiki/Downloads)).
 
 Note that during the installation process, the software installer may warn to
 install `win32` bindings. This can be via windows console with the following
