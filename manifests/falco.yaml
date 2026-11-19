@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco
+  labels:
+    kubernetes.io/metadata.name: falco
+spec:
+  finalizers:
+    - kubernetes
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: falco
+  namespace: falco
+spec:
+  targetNamespace: falco
+  repo: https://falcosecurity.github.io/charts
+  chart: falco
+
+  valuesContent: |-
+    falcosidekick:
+      enabled: true
+      image:
+        tag: "latest"
+
+      webui:
+        enabled: true
