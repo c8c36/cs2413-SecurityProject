@@ -1,23 +1,23 @@
-**WHAT IS CURRENTLY AVAILABLE**
+# WHAT IS CURRENTLY AVAILABLE
 
 solutions fall into layer because abuse shows up in different places depending on how the token was stolen or used
 
-*WHAT WE TRY TO CATCH:*
+### WHAT WE TRY TO CATCH:
 theft - something reads token inside pod or attacker execs in to grab it
 use: token is in places it shouldn’t be or does work that never does (enumeration, secret reads, RBAC changes)
 Minting and persistence: attaker uses tokenReq to create tokens that never touch a filesystem
 
 *THERE IS NO SINGLE TOOL that can cover all this issues so we have to combine runtime monitoring (theft) with auditlog analysis (use and minting)/*
 
-**FALCO**
+# FALCO
 
-WHAT IS IT?
+**WHAT IS IT?**
 - Falcos's driver captures system calls on each node and passes them to userspace, where the rule engine evaluates them. 
 - Falco takes the event stream, checks it agaisnt its rules and alerts when a rule is violated
 - Falco can use audit logs and metadata as another event source - but it needs a separate setup (a plugin and an audit webhook)
 - Sycall side sees what happens inside the containers
 
-HOW TO APPLY IT IN TOKEN ABUSE
+### HOW TO APPLY IT IN TOKEN ABUSE
 There exists two detection ideas
 
 1. SOMEONE READ THE TOKEN FILE
@@ -65,9 +65,9 @@ evt.type=connect and (fd.typechar=4 or fd.typechar=6) and container and k8s_api_
 - LIMITS: The token-read rule cannot see tokens created through TokenRequest, because no file is read. The API-contact rule only sees connections from containers on nodes where Falco runs, so it misses a stolen token used from outside the cluster, and it never observes the minting event itself. Audit-log detection (TokenRequest events, requests from unexpected sources) is needed to cover these cases.
 ---
 
-**ELASTIC RULES**
+# ELASTIC RULES
 WHAT IS ELASTIC: 
-    -  a company whose security product analyzes log data and includes prebuilt detection rules. For Kubernetes, its rules analyze audit logs.
+    - a company whose security product analyzes log data and includes prebuilt detection rules. For Kubernetes, its rules analyze audit logs.
     - WE WILL USE: its prebuilt SIEM rules for Kubernetes audit logs
 
 AUDIT LOGS
@@ -122,7 +122,7 @@ event.dataset: "kubernetes.audit_logs"
 NOTE: scripts, test accounts, third-party integrations and misconfigured RBAC can all trigger false positives
 
 ----
-# APPLICATION
+# APPLICATION OF FALCO
 
 ## HOW TO DONWLOAD FALCO INTO KUBERNETES WITH HELM
 
@@ -259,10 +259,20 @@ kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=200 | grep
 3. Attacker is stuck inside the untrusted pod because of RBAC, so when they steal the token from an untrusted pod, the rule fires
 
 4. Admin created legit pod and apps namespace to showcase normal activity because those are things attacker cannot do
+---- 
+# SCREENSHOTS
+
+<img width="1022" height="700" alt="Screenshot 2026-11-19 180249" src="https://github.com/user-attachments/assets/6b7a99e6-29da-4ba8-9e02-e44e4c58cf2a" />
+--
+<img width="1290" height="375" alt="Screenshot 2026-11-19 180833" src="https://github.com/user-attachments/assets/95c18463-6f93-49f8-bc7e-42e1188734c3" />
+-- 
+<img width="1287" height="442" alt="Screenshot 2026-11-19 181250" src="https://github.com/user-attachments/assets/c31d9e3d-a330-4c8b-9269-fafc65bf70a6" />
+--
+<img width="1295" height="92" alt="Screenshot 2026-11-19 181526" src="https://github.com/user-attachments/assets/07c7cfc1-95df-4816-b969-bbb586bd4a9b" />
 
 
 ----
-RESOURCES ETC
+# RESOURCES ETC
 
 Runtime Security with Falco on Kubernetes: Rules, Tuning, and Response Automation:
 https://www.systemshardening.com/articles/kubernetes/falco-runtime-security/ 
