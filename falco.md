@@ -261,13 +261,16 @@ kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=200 | grep
 4. Admin created legit pod and apps namespace to showcase normal activity because those are things attacker cannot do
 ---- 
 # SCREENSHOTS
+<img width="952" height="637" alt="Screenshot 2026-11-19 174548" src="https://github.com/user-attachments/assets/870cb4fb-4919-4f47-bd81-d9f96f34dfa3" />
+
+----
 
 <img width="1022" height="700" alt="Screenshot 2026-11-19 180249" src="https://github.com/user-attachments/assets/6b7a99e6-29da-4ba8-9e02-e44e4c58cf2a" />
---
+----
 <img width="1290" height="375" alt="Screenshot 2026-11-19 180833" src="https://github.com/user-attachments/assets/95c18463-6f93-49f8-bc7e-42e1188734c3" />
--- 
+----
 <img width="1287" height="442" alt="Screenshot 2026-11-19 181250" src="https://github.com/user-attachments/assets/c31d9e3d-a330-4c8b-9269-fafc65bf70a6" />
---
+----
 <img width="1295" height="92" alt="Screenshot 2026-11-19 181526" src="https://github.com/user-attachments/assets/07c7cfc1-95df-4816-b969-bbb586bd4a9b" />
 
 
