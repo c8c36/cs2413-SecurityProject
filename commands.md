@@ -114,7 +114,7 @@ spec:
           image: python:3.15-bookworm
           command: ["bin/bash", "-c", "--"]
           args: ["while true; do sleep 60; done;"]
-      serviceAccountName: kube-system
+      serviceAccountName: job-controller
       automountServiceAccountToken: true
 '''
 
