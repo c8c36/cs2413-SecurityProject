@@ -120,6 +120,147 @@ event.dataset: "kubernetes.audit_logs"
   and kubernetes.audit.annotations.authorization_k8s_io/decision: "forbid"
 
 NOTE: scripts, test accounts, third-party integrations and misconfigured RBAC can all trigger false positives
+
+----
+# APPLICATION
+
+## HOW TO DONWLOAD FALCO INTO KUBERNETES WITH HELM
+
+- First we need to add the Falco chart repository to Helm:
+```
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+helm repo update
+```
+- Then we need to install Falco:
+```
+helm install --replace falco --namespace falco --create-namespace --set tty=true falcosecurity/falco
+```
+- To be sure, its appropiate to check that Falco pods are running:
+```
+kubectl get pods -n falco
+```
+- Before we can begin working with the pods we need to make sure and wait until they are ready:
+```
+kubectl wait pods --for=condition=Ready --all -n falco
+```
+NOTE: the pod is ready when it shows 2/2 Running
+
+## HOW TO ADD A NEW CUSTOM RULE
+- Its important to notice and remember that Falco's default rules do not cover service account token reads, for that we are required to add our own custom ones.
+- Since we installe Falco with Helm, the custom rules we created are passed in through a value file.
+
+#### STEP 1
+  - Lets start creating a file called custom-rules.yaml:
+```
+nano custom-rules.yaml
+```
+#### STEP 2
+  - Inside of the file we just created, we would write in our custom rule.
+  - REMINDERS: 
+        - The indentation matters becauase its a YAML file.
+        - The top-level key must be customRules. A mistake I made was to write custom-rules, Helm will accept the file but the file will be silently ignored 
+```
+customRules:
+  rules-token.yaml: |-
+    - list: sa_token_trusted_images
+      items: [trusted-placeholders]
+
+    - rule: Service Account Token Read In Container
+      desc: A process opened a Kubernetes service account token from an untrusted image
+      condition: >
+        open_read and container
+        and fd.name contains "kubernetes.io/serviceaccount"
+        and fd.name contains "token"
+        and not k8s.ns.name in (kube-system, apps)
+        and not container.image.repository in (sa_token_trusted_images)
+      output: >
+        SA token read (file=%fd.name process=%proc.name cmdline=%proc.cmdline
+        image=%container.image.repository ns=%k8s.ns.name pod=%k8s.pod.name)
+      priority: WARNING
+      tags: [container, credential_access, k8s]
+```
+*WHAT DOES THE RULE DOES:*
+- The rule will fire when a process inside a container opens the service account token file for reading (open_read and container, additionally the two fd.name conditions)
+- Also, we included allowlists to avoid false positives:
+      - The namespaces kube-system and apps are treated as normal
+
+#### STEP 3
+  - Now, we ned to apply the rule file to the existing Falco installation:
+```
+helm upgrade falco falcosecurity/falco -n falco --set tty=true -f custom-rules.yaml
+```
+#### STEP 4
+- Falco only reads its rules when it starts. We gonna restart it and wait until the pods are 2/2 Running:
+```
+kubectl rollout restart daemonset falco -n falco
+kubectl get pods -n falco -w
+```
+NOTE: if you want to stop press CTRL + C
+
+#### STEP 5
+- To finalize, we need to check that the rule is loaded. The logs should show rules-token.yaml under "Loading rules from" with schema validation: ok (with no errors, of course):
+```
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=40 | grep -i -E "rules|error"
+```
+if all ok, rule has been loaded!!
+
+----
+# SCENARIOS: LEGIMATE BEHAVIOUR VS ILLEGIMATE 
+
+- We have created a custom rule! but now we need to make sure that rule works. 
+- We will run the same action in two places:
+    - a pod in the allowlisted namescape (normal behaviour)
+    - a pod in the default namescape (attack)
+
+## NORMAL BEHAVIOUR
+- Start by creating the apps namescape and a pod inside of it
+```
+kubectl create namespace apps
+kubectl run legit -n apps --image=busybox --restart=Never -- sleep 86400
+kubectl get pod legit -n apps
+```
+- Once the pod is runnin, read the token:
+```
+kubectl exec -n apps legit -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
+```
+## ATTACK BEHAVIOUR
+- Here we going to simulate an attacker who got into a pod and steals its token
+```
+kubectl run test --image=busybox --restart=Never -- sleep 86400
+kubectl exec test -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
+```
+#### COMPARING RESULTS
+- We are going to look into Falco's logs for both pods
+```
+kubectl logs -n falco -l app.kubernetes.io/name=falco -c falco --tail=200 | grep -E "pod=(test|legit)"
+```
+- RESULTS:
+    - test (namescape default): Falco show the warning (Warning SA token read) alert with the file path, the process (cat), the image (busybox), the namescape and the pod name
+    - legit (namescape apps): no alert shown
+
+----
+## CONCLUSION
+- The rule we created detects a token being read inside a container and gives appropiate information to investigate (pod, namespace, image, process and command line)
+- Because Falco rules are plain YAML conditions, they are fairly easy to write, tune and script
+---
+## LIMITATIONS
+- The allowlist is a blind spot, an attacker who compromises inside apps would not be flagged
+- A token created in TokenRequest API never touches a file, so this specific rule cannot detect it. This is why we need audit-log detection 
+- A token used from outside the cluster is not detected with this rulw
+- This rule is only for detection, it does not stop the attacker
+
+## ASSUMPTIONS 
+- This demo is simplified for the sake of time and space (presentation and report), a full set up needs a lot of more rules. A single rule can't catch every way a token can be abused
+
+1. We dont show how the attacker got in. The demo starts when they are already inside and kubectl exec plays as the attacker running commands inside the pod
+
+2. RBAC is already assumed, as it decides what each service account is allowed to do. We assume that attacker (in simple terms) has a normal, low privilege service account (kubernetes default), so no admin access. Attacker cannot create pods or namespaces in trusted apps namespace
+
+3. Attacker is stuck inside the untrusted pod because of RBAC, so when they steal the token from an untrusted pod, the rule fires
+
+4. Admin created legit pod and apps namespace to showcase normal activity because those are things attacker cannot do
+
+
 ----
 RESOURCES ETC
 
