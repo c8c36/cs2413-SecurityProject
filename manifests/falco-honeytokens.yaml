@@ -37,7 +37,7 @@ spec:
           open_read and container
           and fd.name contains "kubernetes.io/serviceaccount"
           and fd.name contains "token"
-          and k8s.ns.name = "unsafe-jobs-prod"
+          and k8s.ns.name in (unsafe-jobs-prod, default, apps)
 
         output: >
           HONEYPOT TOKEN READ
