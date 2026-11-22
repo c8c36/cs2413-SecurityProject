@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: falco
+  labels:
+    kubernetes.io/metadata.name: falco
+spec:
+  finalizers:
+    - kubernetes
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: falco
+  namespace: falco
+spec:
+  targetNamespace: falco
+  repo: https://falcosecurity.github.io/charts
+  chart: falco
+
+  valuesContent: |-
+    falcosidekick:
+      enabled: true
+      image:
+        tag: "latest"
+
+      webui:
+        enabled: true
+
+    customRules:
+      - rule: Kubernetes Honeypot Service Account Token Read in "strict-job" namespace
+        desc: >
+          Detects a process reading the decoy service account token mounted at
+          Kubernetes' conventional token location.
+        condition: >
+          open_read and container
+          and fd.name contains "kubernetes.io/serviceaccount"
+          and fd.name contains "token"
+          and k8s.ns.name = "unsafe-jobs-prod"
+
+        output: >
+          HONEYPOT TOKEN READ
+          (namespace=%k8s.ns.name
+           pod=%k8s.pod.name
+           container=%container.name
+           image=%container.image.repository
+           process=%proc.name
+           command=%proc.cmdline
+           parent=%proc.pname
+           user=%user.name
+           file=%fd.name
+           container_id=%container.id)
+        priority: CRITICAL
+        tags:
+          - kubernetes
+          - container
+          - credential_access
+          - honeypot
+          - service_account
