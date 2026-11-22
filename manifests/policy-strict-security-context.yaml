@@ -1,0 +1,117 @@
+# security.worker/jobs-strict-security-context: "true"
+#
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: strict-security-context.security.worker
+spec:
+  failurePolicy: Fail
+
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs"]
+        scope: Namespaced
+
+  variables:
+    - name: pod
+      expression: object.spec.template.spec
+
+    - name: containers
+      expression: >
+        object.spec.template.spec.containers +
+        (
+          has(object.spec.template.spec.initContainers)
+            ? object.spec.template.spec.initContainers
+            : []
+        )
+
+  validations:
+    - expression: >
+        (!has(variables.pod.hostNetwork) || !variables.pod.hostNetwork) &&
+        (!has(variables.pod.hostPID) || !variables.pod.hostPID) &&
+        (!has(variables.pod.hostIPC) || !variables.pod.hostIPC)
+      message: "Jobs may not use host network, PID, or IPC namespaces."
+      reason: Forbidden
+
+    - expression: >
+        has(variables.pod.securityContext) &&
+        has(variables.pod.securityContext.runAsNonRoot) &&
+        variables.pod.securityContext.runAsNonRoot
+      message: "securityContext.runAsNonRoot must be true."
+      reason: Forbidden
+
+    - expression: >
+        has(variables.pod.securityContext) &&
+        has(variables.pod.securityContext.seccompProfile) &&
+        variables.pod.securityContext.seccompProfile.type == 'RuntimeDefault'
+      message: "Must use the RuntimeDefault seccomp profile."
+      reason: Forbidden
+
+    - expression: >
+        !has(variables.pod.securityContext.sysctls) ||
+        size(variables.pod.securityContext.sysctls) == 0
+      message: "sysctls are not allowed."
+      reason: Forbidden
+
+    - expression: >
+        variables.containers.all(c,
+          has(c.securityContext) &&
+          (!has(c.securityContext.privileged) ||
+            !c.securityContext.privileged) &&
+          has(c.securityContext.allowPrivilegeEscalation) &&
+          !c.securityContext.allowPrivilegeEscalation
+        )
+      message: >-
+        Every container must be non-privileged and set
+        allowPrivilegeEscalation to false.
+      reason: Forbidden
+
+    - expression: >
+        variables.containers.all(c,
+          (!has(c.securityContext.runAsNonRoot) ||
+            c.securityContext.runAsNonRoot) &&
+          (!has(c.securityContext.runAsUser) ||
+            c.securityContext.runAsUser != 0)
+        )
+      message: "A container may not override non-root execution."
+      reason: Forbidden
+
+    - expression: >
+        variables.containers.all(c,
+          has(c.securityContext.capabilities) &&
+          has(c.securityContext.capabilities.drop) &&
+          'ALL' in c.securityContext.capabilities.drop &&
+          (
+            !has(c.securityContext.capabilities.add) ||
+            size(c.securityContext.capabilities.add) == 0
+          )
+        )
+      message: "Every container must drop ALL capabilities and add none."
+      reason: Forbidden
+
+    - expression: >
+        variables.containers.all(c,
+          !has(c.securityContext.procMount) ||
+          c.securityContext.procMount == 'Default'
+        )
+      message: "Only the default proc mount is allowed."
+      reason: Forbidden
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: strict-security-context.bind.security.worker
+spec:
+  policyName: strict-security-context.security.worker
+
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        security.worker/jobs-strict-security-context: "true"
+
+  validationActions:
+    - Deny
+    - Audit

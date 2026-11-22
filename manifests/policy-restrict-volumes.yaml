@@ -1,0 +1,44 @@
+# security.worker/jobs-restrict-volume-access: "true"
+#
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: "restrict-volume-access.security.worker"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs"]
+        scope: Namespaced
+  variables:
+    - name: pod
+      expression: object.spec.template.spec
+
+  validations:
+    - expression: >-
+        size(variables.pod.volumes) == 0 ||
+        size(variables.pod.volumes) == 1
+        variables.pod.volumes.exists(,
+          v.name == 'scratch' && has(v.emptyDir)
+        )
+      reason: Invalid
+      message: "The Job template can only use emptyDir volume named 'scratch'."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: restrict-volume-access.bind.security.worker
+spec:
+  policyName: restrict-volume-access.security.worker
+
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        security.worker/jobs-restrict-volume-access: "true"
+
+  validationActions:
+    - Deny
+    - Audit

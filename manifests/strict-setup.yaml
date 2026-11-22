@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: unsafe-jobs-prod
+  labels:
+    kubernetes.io/metadata.name: unsafe-jobs-prod
+    security.worker/jobs-readonly-rootfs: "true"
+    security.worker/jobs-remove-tokens-access: "true"
+    security.worker/jobs-restrict-volume-access: "true"
+    security.worker/jobs-strict-security-context: "true"
+
+spec:
+  finalizers:
+    - kubernetes
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: strict-job-ctl
+  namespace: unsafe-jobs-prod
+rules:
+  - verbs: ["get", "list", "watch", "create"]
+    apiGroups: ["batch"]
+    resources: ["jobs"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: strict-job-ctl
+  namespace: unsafe-jobs-prod
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: strict-job-ctl
+  namespace: unsafe-jobs-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: strict-job-ctl
+subjects:
+  - kind: ServiceAccount
+    name: strict-job-ctl
+    namespace: unsafe-jobs-prod
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-account-token-canary
+  namespace: unsafe-jobs-prod
+data:
+  # Realisticly long token - 1
+  token: gnm3ggRmlOuwvi3TrawJuYX6etce6DNEkyILIiHYH5ogfBGbFq8MK7ey9hjNoUrz3G5Dz12mzar0j7TFc64CkYq5U4R1bAe7zSn4BLWeRTZicnJySstEI7Xd3z1VbNL7mCfwEFX8SGZKrsW6qJq2clhdkGTWHpdURnEG0SKIxSz1ZpYli0R7A1hMUdWP801GaA84zTzuHsEZvui8yYsAsHS5s5ELfp4GhCJHeZjdqB4bQMh7woobhFPOre89rzNMomIaI0FRFuSDvE5HZd1cLjxpxeQl3z3wIIzoHWKfMCqy5LnWWaa6OZ9CkkXIcz5OGF2wfBE405aeeZ7Pt1Ggze0KV5e6QIDvVFvaYpE3PuTcw51F7DDL9JPDFl2eBkbzrXCw8dBTvuR1rcxqCS1nzLaKGDyapttFjak6pxdtRoaY289BK8HkVCTP77mkOCAWEfMDoLFA5G396UnodrCq5BSHZCfj7vNcTitcNqy7APYLT4KHZMjaGYYBYSmzNAk6Qhs5DHca21QFLW3EYFA7tV92C8jBQfbwPN1rEHgXkL8IOAZ2Y1kknI7cJwORFKr00qj3dazBahqn9KkwMAKCOsBZrhm2gLcFSUhpcKfZDsMa3wob3OfcGtdHwQHpHfTOMnVHO4KaC0snYCrwfQYlac76pJXeNK3YRQJGdOk6y0z0yLeEGjOt8785nJoc2e8KYe7PIXPkbMWPPIczOqmnLUcNzN4Ba7NcRWGdCjdMJ26dor52vvkPPmgXNmqdJUWiTgl9NbUUTCc7ZNi3AjlgmQ26rW98KgoTH79kghvk6skgv10nYC8P5xRdYO6BEgGnWdBGFknG943lwH01tCarofU9WaugE7JMCLbRnVQiuSesN6YhPZ7n2hPfBWiZQT4Ujwg8bkZG4bh9UIm2RIBocwhCDvB6lXqAMZPn9bZVeZODDxd9DCIu528LZty1PBy8INgcKu8Y02tERSkmnd8r1ueSg5EEGGPIzsy80x5xLHnKpN9h6B8Xe7NdH8Lflv1lYH1RFz7Py7jHKxoXbgcbGImiidm2CKIhJLxvj7IFNFDswklERJUxQhSBloPSdTsbyxR4EyyoVU4fAQklJPiPTgFiD2RnoHH00e87OlG7gUTmSgLvN64loc6luBU3sM8dzdc0xeXsopKaXmY9FW0S97us
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: strict-pod
+  namespace: unsafe-jobs-prod
+spec:
+  serviceAccountName: strict-job-ctl
+  automountServiceAccountToken: false
+
+  containers:
+    - name: runtime
+      image: python:3.15-bookworm
+      command: ["bin/bash", "-c", "--"]
+      args: ["while true; do sleep 60; done;"]
+
+      volumeMounts:
+        # NOTE: FAR FROM IDEAL LOCATION. Usually it should mask as garbage value in
+        # the current environment. I.e. /tmp/startup/log.hash
+        - name: real-service-account-token
+          mountPath: /var/run/application-id
+          readOnly: true
+
+        - name: honeypot-token
+          mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+          readOnly: true
+
+  volumes:
+    - name: real-service-account-token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              audience: https://kubernetes.default.svc
+              expirationSeconds: 600
+    - name: honeypot-token
+      configMap:
+        name: service-account-token-canary
+        items:
+          - key: token
+            path: token

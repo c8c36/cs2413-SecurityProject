@@ -1,0 +1,42 @@
+# security.worker/jobs-remove-tokens-access: "true"
+#
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: "remove-tokens-access.security.worker"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs"]
+        scope: Namespaced
+
+  variables:
+    - name: pod
+      expression: object.spec.template.spec
+
+  validations:
+    - expression: >-
+        !variables.pod.automountServiceAccountToken &&
+        size(variables.pod.serviceAccountName) == 0
+      reason: Forbidden
+      message: "The Job is not allowed to mount service accounts."
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: remove-tokens-access.bind.security.worker
+spec:
+  policyName: remove-tokens-access.security.worker
+
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        security.worker/jobs-remove-tokens-access: "true"
+
+  validationActions:
+    - Deny
+    - Audit
