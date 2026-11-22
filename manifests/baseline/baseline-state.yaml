@@ -4,7 +4,7 @@ metadata:
   name: job-controller
   namespace: default
 rules:
-  - verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - verbs: ["get", "list", "watch", "create"]
     apiGroups: ["batch"]
     resources: ["jobs"]
 ---
