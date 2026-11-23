@@ -30,7 +30,7 @@ spec:
 
     customRules:
       honey-rule.yaml: |-
-        - rule: Kubernetes Honeypot Service Account Token Read in "strict-job" namespace
+        - rule: Kubernetes Honeypot Service Account Token Read in "unsafe-jobs-prod" namespace
           desc: >
             Detects a process reading the decoy service account token mounted at
             Kubernetes' conventional token location.
