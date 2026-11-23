@@ -84,7 +84,6 @@ spec:
         sources:
           - serviceAccountToken:
               path: token
-              audience: https://kubernetes.default.svc
               expirationSeconds: 600
     - name: honeypot-token
       configMap:

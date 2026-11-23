@@ -13,16 +13,20 @@ spec:
         operations: ["CREATE", "UPDATE"]
         resources: ["jobs"]
         scope: Namespaced
+
   variables:
-    - name: pod
-      expression: object.spec.template.spec
+    - name: volumes
+      expression: object.spec.template.spec.volumes
 
   validations:
     - expression: >-
-        size(variables.pod.volumes) == 0 ||
-        size(variables.pod.volumes) == 1
-        variables.pod.volumes.exists(,
-          v.name == 'scratch' && has(v.emptyDir)
+        has(variables.volumes) && (
+          size(variables.volumes) == 0 ||
+          (size(variables.volumes) == 1 &&
+            variables.volumes.exists(v,
+              v.name == 'scratch' && has(v.emptyDir)
+            )
+          )
         )
       reason: Invalid
       message: "The Job template can only use emptyDir volume named 'scratch'."

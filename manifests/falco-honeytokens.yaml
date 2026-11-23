@@ -29,32 +29,33 @@ spec:
         enabled: true
 
     customRules:
-      - rule: Kubernetes Honeypot Service Account Token Read in "strict-job" namespace
-        desc: >
-          Detects a process reading the decoy service account token mounted at
-          Kubernetes' conventional token location.
-        condition: >
-          open_read and container
-          and fd.name contains "kubernetes.io/serviceaccount"
-          and fd.name contains "token"
-          and k8s.ns.name in (unsafe-jobs-prod, default, apps)
+      honey-rule.yaml: |-
+        - rule: Kubernetes Honeypot Service Account Token Read in "strict-job" namespace
+          desc: >
+            Detects a process reading the decoy service account token mounted at
+            Kubernetes' conventional token location.
+          condition: >
+            open_read and container
+            and fd.name contains "kubernetes.io/serviceaccount"
+            and fd.name contains "token"
+            and k8s.ns.name in (unsafe-jobs-prod, default, apps)
 
-        output: >
-          HONEYPOT TOKEN READ
-          (namespace=%k8s.ns.name
-           pod=%k8s.pod.name
-           container=%container.name
-           image=%container.image.repository
-           process=%proc.name
-           command=%proc.cmdline
-           parent=%proc.pname
-           user=%user.name
-           file=%fd.name
-           container_id=%container.id)
-        priority: CRITICAL
-        tags:
-          - kubernetes
-          - container
-          - credential_access
-          - honeypot
-          - service_account
+          output: >
+            HONEYPOT TOKEN READ
+            (namespace=%k8s.ns.name
+             pod=%k8s.pod.name
+             container=%container.name
+             image=%container.image.repository
+             process=%proc.name
+             command=%proc.cmdline
+             parent=%proc.pname
+             user=%user.name
+             file=%fd.name
+             container_id=%container.id)
+          priority: CRITICAL
+          tags:
+            - kubernetes
+            - container
+            - credential_access
+            - honeypot
+            - service_account

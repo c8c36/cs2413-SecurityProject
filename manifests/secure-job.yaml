@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: calculation
-  namespace: secure-jobs
+  namespace: unsafe-jobs-prod
 spec:
   template:
     spec:
@@ -15,7 +15,20 @@ spec:
 
       containers:
         - name: calculation
-          image: example/calculation:1.0
+          image: cgr.dev/chainguard/busybox:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Secure Job started"
+              echo "Running as:"
+              id
+              echo "Attempting to write to root filesystem:"
+              touch /root/test 2>&1 || true
+              echo "Writing to the permitted temporary directory:"
+              echo "Job completed successfully" > /tmp/job-result
+              cat /tmp/job-result
 
           securityContext:
             allowPrivilegeEscalation: false
@@ -24,10 +37,10 @@ spec:
               drop: ["ALL"]
 
           volumeMounts:
-            - name: tmp
+            - name: scratch
               mountPath: /tmp
 
       volumes:
-        - name: tmp
+        - name: scratch
           emptyDir:
             sizeLimit: 1Gi

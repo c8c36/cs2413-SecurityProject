@@ -20,8 +20,8 @@ spec:
 
   validations:
     - expression: >-
-        !variables.pod.automountServiceAccountToken &&
-        size(variables.pod.serviceAccountName) == 0
+        (!has(variables.pod.automountServiceAccountToken) &&
+        !has(variables.pod.serviceAccountName))
       reason: Forbidden
       message: "The Job is not allowed to mount service accounts."
 ---
