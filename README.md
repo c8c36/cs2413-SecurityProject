@@ -9,12 +9,17 @@ demonstrate token security within a compromised environment.
 
 - [README](#readme)
   - [`k3s-token-lab` Virtual Machine Information](#k3s-token-lab-virtual-machine-information)
-    - [Setup Instructions](#setup-instructions)
+  - [Setup Instructions](#setup-instructions)
+  - [Build Instructions](#build-instructions)
     - [Installation Instructions (Windows)](#installation-instructions-windows)
       - [VirtualBox](#virtualbox)
       - [Nix Package Manager](#nix-package-manager)
 
 <!--toc:end-->
+
+# README
+
+This is repository for introduction to cyber security project.
 
 ## `k3s-token-lab` Virtual Machine Information
 
@@ -25,9 +30,29 @@ Credentials: `lab` and `lab` are username and password respectively.
 
 Services: K3s cluster, ssh.
 
-Exposed ports: 22/ssh service, and 6443/kubeapi server.
+List of Host:Machine ports mappings:
 
-### Setup Instructions
+- 2222:22 - ssh service.
+- 6443:6443 - kubeapi server.
+- 30000:30000 - Headlamp web user interface.
+
+## Setup Instructions
+
+**PRE-REQUISITES**:
+
+- Download Oracle VirtualBox virtual machine manager.
+- Acquire `k3s-token-lab.ova` appliance. Either by downloading it from OneDrive
+  if you are UNB student or send an email to c8c36@unb.ca for instructions, or
+  build it directly (see build instructions below). The author of this
+  repository takes no responsibility for downloading appliance from other
+  sources and harm caused by these downloads.
+- Windows or Linux operating systems with x86_64 CPU. aarch64 CPUs are known to
+  be incompatible, work in progress to support them. Refer to
+
+For the next steps, go to [commands.md](/commands.md) file for different
+commands and their descriptions.
+
+## Build Instructions
 
 > SKIP TO [VirtualBox](#virtualbox) UNDER IN
 > [Installation Instructions (Windows)](#installation-instructions-windows) IF

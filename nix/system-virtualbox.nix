@@ -7,6 +7,8 @@
       PasswordAuthentication = true;
     };
   };
+  services.firewalld.enable = true;
+  networking.nftables.enable = true;
 
   networking.hostName = "k3s-token-lab";
   networking.networkmanager.enable = true;
@@ -26,11 +28,8 @@
     nano
     git
     jq
-  ];
-
-  networking.firewall.allowedTCPPorts = [
-    22
-    6443 # k3s: required so that pods can reach the API server (running on port 6443 by default)
+    man-pages
+    man-pages-posix
   ];
 
   virtualisation.virtualbox.guest.enable = true;
@@ -38,6 +37,13 @@
   image.modules.virtualbox = {
     virtualisation.diskSize = 20 * 1024;
     image.fileName = lib.mkForce "k3s-token-lab.ova";
+    virtualbox.params = {
+      nat-pf1 = [
+        "cluster,tcp,127.0.0.1,6443,,6443" # kube port-forward
+        "ssh,tcp,127.0.0.1,2222,,22" # ssh port-forward
+        "web,tcp,127.0.0.1,30000,,30000" # headlamp port-forward
+      ];
+    };
   };
 
   system.stateVersion = "26.05";
